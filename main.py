@@ -24,6 +24,12 @@ async def get_name(url):
         json_data = await response.json()
         return json_data['name']
 
+async def get_title(url):
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as client:
+        response = await client.get(url=url)
+        json_data = await response.json()
+        return json_data['title']
+
 async def paste_to_db(people_list):
     i = 0
     async with Session() as session:
@@ -33,13 +39,23 @@ async def paste_to_db(people_list):
             else:
                 species_list = []
                 starships_list = []
+                vehicles_list = []
+                films_list = []
+                for url in people['films']:
+                    films_list.append(await get_title(url))
+                for url in people['vehicles']:
+                    vehicles_list.append(await get_name(url))
                 for url in people['starships']:
                     starships_list.append(await get_name(url))
                 for url in people['species']:
                     species_list.append(await get_name(url))
+                films = ", ".join(films_list)
+                vehicles = ", ".join(vehicles_list)
                 species = ", ".join(species_list)
                 starships = ", ".join(starships_list)
                 new_people = SwapiPeople(
+                    films=films,
+                    vehicles=vehicles,
                     starships=starships,
                     species=species,
                     name=people['name'],
